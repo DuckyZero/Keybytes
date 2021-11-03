@@ -1,9 +1,6 @@
-# Voice-Activated-Soundboard
+# Keybyes
 
 > Keybytes is a voice activated soundboard 
-
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-![Contributors](https://img.shields.io/badge/Contributors-4-green)
 
 ## Contributors
 * [Christopher Rossi](https://github.com/duckyzero)
