@@ -6,7 +6,6 @@
 * [Christopher Rossi](https://github.com/duckyzero)
 * [Josh Degazio](https://github.com/ResurrectHD)
 * [Paige Broussard](https://github.com/Brou-0510)
-* [Tayden Bachert](https://github.com/taydanb)
 
 ## Technologies
 This project was made in Python
