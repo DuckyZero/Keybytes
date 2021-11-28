@@ -119,6 +119,7 @@ class SoundBoard():
                     if tempParts[0] != u_inpt:
                         f.write(line)
 
+            os.remove(self.keybytes[u_inpt])
             del self.keybytes[u_inpt]
             print('Successfully deleted Keybyte binded to: %s' % u_inpt)
         else:
