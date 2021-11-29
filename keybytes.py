@@ -18,6 +18,7 @@ from EventHandler import SpeechHandler
 
 class SoundBoard():
     keybytes = {}
+    keywords = {}
 
     def __init__(self, dpath):
         self.dpath = dpath
@@ -32,9 +33,14 @@ class SoundBoard():
             os.makedirs('%sSounds\\' % self.dpath)
             f = open('%skeybinds.txt' % self.dpath, 'x')
             f.close
+            f = open('%skeywords.txt' % self.dpath, 'x')
+            f.close
             # Create all other files we need here.
         if not os.path.exists('%skeybinds.txt' % self.dpath):
             f = open('%skeybinds.txt' % self.dpath, 'x')
+            f.close()
+        if not os.path.exists('%skeywords.txt' % self.dpath):
+            f = open('%skeywords.txt' % self.dpath, 'x')
             f.close()
         if not os.path.exists('%sSounds\\' % self.dpath):
             os.makedirs('%sSounds\\' % self.dpath)
@@ -44,7 +50,9 @@ class SoundBoard():
         print('\n\nCreate a Keybyte:')
         temp_soundbyte = ''
         temp_keybind = ''
+        temp_keyword = ''
         notIn = False
+        notIn2 = False
 
         # Error handling and input
         while not notIn:
@@ -61,6 +69,15 @@ class SoundBoard():
             if not temp_soundbyte.endswith('.mp3'):
                 print('You have entered an incorrect file address for an mp3 file. Please try again.')
 
+        while not notIn2:
+            temp_keyword = input('Type the word(s), with spaces, that you would like to assign a soundbyte to for voice activation: ')
+            if temp_keyword in self.keywords:
+                print('You have entered a pre-existing keyword. Please try again.')
+            elif temp_keyword == '':
+                print('You have not entered a keyword. Please try again')
+            else:
+                notIn2 = True
+
         parts = []
         parts = temp_soundbyte.split('\\')
         nAddress = '%sSounds\\%2s' % (self.dpath, parts[-1])
@@ -68,10 +85,14 @@ class SoundBoard():
 
         # Add keybyte to dictionary
         self.keybytes[temp_keybind] = nAddress
+        self.keywords[temp_keyword] = temp_keybind
 
         # Add keybyte to file
         f = open('%skeybinds.txt' % self.dpath, 'a')
         f.write('%s, %s\n' % (temp_keybind, nAddress))
+        f.close()
+        f = open('%skeywords.txt' % self.dpath, 'a')
+        f.write('%s, %s\n' % (temp_keyword, temp_keybind))
         f.close()
         print('\nKeybyte successfully created!')
         self.menu()
@@ -92,6 +113,19 @@ class SoundBoard():
                 print('Added %s keybind, with %s file location' % (parts[0], parts[1]))
         f.close()
 
+        f = open('%skeywords.txt' % self.dpath, 'r')
+        lines = f.readlines()
+        parts = []
+
+        # Read through and append keybytes from file into dictionary
+        if len(lines) > 0 and len(lines[0]) > 1:
+            for line in lines:
+                templine = line.strip()
+                parts = templine.split(', ')
+                self.keybytes[parts[0]] = parts[1]
+                print('Added %s keyword, with %s keybind' % (parts[0], parts[1]))
+        f.close()
+
     # Lists all keybytes
     def list_keybytes(self):
         print('\n\nList Keybytes:')
@@ -99,6 +133,10 @@ class SoundBoard():
         for line in self.keybytes:
             print('\nKeybind: %s' % line)
             print('Plays Sound: %s' % self.keybytes[line])
+
+        for line in self.keywords:
+            print('\nKeyword: %s' % line)
+            print('Plays keybind: %s' % self.keybytes[line])
 
         self.menu()
 
@@ -124,9 +162,18 @@ class SoundBoard():
                     tempParts = (line.strip("\n")).split(', ')
                     if tempParts[0] != u_inpt:
                         f.write(line)
+            with open('%skeywords.txt' % self.dpath, 'r') as f:
+                lines = f.readlines()
+            with open('%skeywords.txt' % self.dpath, 'w') as f:
+                for line in lines:
+                    tempParts = []
+                    tempParts = (line.strip("\n")).split(', ')
+                    if tempParts[1] != u_inpt:
+                        f.write(line)
 
             os.remove(self.keybytes[u_inpt])
             del self.keybytes[u_inpt]
+            del self.keywords[u_inpt]
             print('Successfully deleted Keybyte binded to: %s' % u_inpt)
         else:
             print('You currently have no Keybytes to delete.')
@@ -216,3 +263,4 @@ thread2.start()
 # listener = keyboard.Listener(on_press=sBoard.on_press, on_release=sBoard.on_release)
 # listener.start()  # start to listen on a separate thread
 #sBoard.menu()
+
