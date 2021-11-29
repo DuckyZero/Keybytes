@@ -11,43 +11,49 @@
 import os
 import sys
 import shutil
+from pygame import *
+from pynput import keyboard
+import threading
+from EventHandler import SpeechHandler
 
 class SoundBoard():
     keybytes = {}
 
     def __init__(self, dpath):
         self.dpath = dpath
-    
-    #Creates folder in Appdata/Roaming, if one does not already exist, to store soundbytes.
+        self.current = ''
+        # self.keybytes = {}
+
+    # Creates folder in Appdata/Roaming, if one does not already exist, to store soundbytes.
     def dirCheck(self):
-        #If it doesn't exist, create folder
+        # If it doesn't exist, create folder
         if not os.path.exists(self.dpath):
             os.makedirs(self.dpath)
             os.makedirs('%sSounds\\' % self.dpath)
             f = open('%skeybinds.txt' % self.dpath, 'x')
             f.close
-            #Create all other files we need here.
+            # Create all other files we need here.
         if not os.path.exists('%skeybinds.txt' % self.dpath):
             f = open('%skeybinds.txt' % self.dpath, 'x')
             f.close()
         if not os.path.exists('%sSounds\\' % self.dpath):
             os.makedirs('%sSounds\\' % self.dpath)
 
-    #Creates and saves keybyte based on user inputted keybind and sound file location
+    # Creates and saves keybyte based on user inputted keybind and sound file location
     def create_keybyte(self):
         print('\n\nCreate a Keybyte:')
         temp_soundbyte = ''
         temp_keybind = ''
         notIn = False
 
-        #Error handling and input
+        # Error handling and input
         while not notIn:
-            temp_keybind = input('Type the keys, separated by a plus, that you would like to assign a soundbyte to: ')
+            temp_keybind = input('Type the key(s), without any spaces, that you would like to assign a soundbyte to: ')
             if temp_keybind in self.keybytes:
                 print('You have entered a pre-existing keybind. Please try again.')
             elif temp_keybind == '':
                 print('You have not entered a keybind. Please try again')
-            else: 
+            else:
                 notIn = True
 
         while not temp_soundbyte[-4:] == ('.mp3'):
@@ -60,24 +66,24 @@ class SoundBoard():
         nAddress = '%sSounds\\%2s' % (self.dpath, parts[-1])
         shutil.copyfile(temp_soundbyte, nAddress)
 
-        #Add keybyte to dictionary
+        # Add keybyte to dictionary
         self.keybytes[temp_keybind] = nAddress
 
-        #Add keybyte to file
+        # Add keybyte to file
         f = open('%skeybinds.txt' % self.dpath, 'a')
         f.write('%s, %s\n' % (temp_keybind, nAddress))
         f.close()
         print('\nKeybyte successfully created!')
         self.menu()
 
-    #Loads keybytes from file into dictionary
+    # Loads keybytes from file into dictionary
     def load_keybytes(self):
-        #Open file and prepare variables
+        # Open file and prepare variables
         f = open('%skeybinds.txt' % self.dpath, 'r')
         lines = f.readlines()
         parts = []
 
-        #Read through and append keybytes from file into dictionary
+        # Read through and append keybytes from file into dictionary
         if len(lines) > 0 and len(lines[0]) > 1:
             for line in lines:
                 templine = line.strip()
@@ -86,17 +92,17 @@ class SoundBoard():
                 print('Added %s keybind, with %s file location' % (parts[0], parts[1]))
         f.close()
 
-    #Lists all keybytes
+    # Lists all keybytes
     def list_keybytes(self):
         print('\n\nList Keybytes:')
-        
+
         for line in self.keybytes:
             print('\nKeybind: %s' % line)
             print('Plays Sound: %s' % self.keybytes[line])
 
         self.menu()
 
-    #Deletes keybyte based on user inputted keybind
+    # Deletes keybyte based on user inputted keybind
     def delete_keybyte(self):
         if len(self.keybytes) > 0:
             print('\n\nDelete Keybyte:')
@@ -104,7 +110,7 @@ class SoundBoard():
             notIn = False
 
             while not notIn:
-                u_inpt = input('Enter the keybind of a Keybyte you wish to delete: ') 
+                u_inpt = input('Enter the keybind of a Keybyte you wish to delete: ')
                 if not u_inpt in self.keybytes:
                     print('Please enter an existing keybind.')
                 else:
@@ -127,7 +133,37 @@ class SoundBoard():
 
         self.menu()
 
-    #Menu of soundboard
+    def play(self):
+        mixer.init()
+        mixer.music.load(self.keybytes[self.current])
+        mixer.music.set_volume(0.7)
+        mixer.music.play()
+        while mixer.music.get_busy():
+            time.Clock().tick(10)
+
+    def on_press(self, key):
+        self.current = self.current + str(key)
+        self.current = self.current.replace("'","")
+        if self.current in self.keybytes:
+            self.play()
+
+    # Play sound sBoard.keybytes[current]
+
+    def on_release(self, key):
+        try:
+            self.current = "" #self.current[:(len(self.current) - 1)]
+        except KeyError:
+            pass
+
+    def listen(self):
+
+        # with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as listener:
+        #     listener.start()
+        #     print("n")
+        listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release, suppress=False)
+        listener.start()
+
+    # Menu of soundboard
     def menu(self):
         u_inpt = None
         print('\n\n[1]: Create Keybyte')
@@ -149,12 +185,34 @@ class SoundBoard():
             self.delete_keybyte()
         elif u_inpt == '4':
             sys.exit()
-        
-#TODO Need to somehow constantly listen to the keyboard so that no matter what the user is doing, they can use their keybytes.
 
-#Create soundboard instance and ensure that if the folder doesnt already exist it is created
-sBoard = SoundBoard('%s\\KeyBytes\\' %  os.environ['APPDATA'] )
+
+# TODO Need to somehow constantly listen to the keyboard so that no matter what the user is doing, they can use their keybytes.
+
+# Create soundboard instance and ensure that if the folder doesnt already exist it is created
+sBoard = SoundBoard('%s\\KeyBytes\\' % os.environ['APPDATA'])
 print('Welcome to Keybytes.')
 sBoard.dirCheck()
 sBoard.load_keybytes()
-sBoard.menu()
+
+thread1 = threading.Thread(target=sBoard.listen(), args=())
+thread2 = threading.Thread(target=sBoard.menu(), args=())
+
+
+thread1.start()
+thread2.start()
+
+
+
+
+
+# listener.start()  # start to listen on a separate thread
+# listener.join()  # remove if main thread is polling self.keys
+
+# with keyboard.Listener(on_press=sBoard.on_press, on_release=sBoard.on_release) as listener:
+#     listener.join()
+#     print("n")
+
+# listener = keyboard.Listener(on_press=sBoard.on_press, on_release=sBoard.on_release)
+# listener.start()  # start to listen on a separate thread
+#sBoard.menu()
