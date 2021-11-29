@@ -1,8 +1,7 @@
 import os
-from playsound import playsound
 import speech_recognition as sr
-from multiprocessing import Queue
-
+from pygame import *
+from pynput import keyboard
 
 class SpeechHandler:
 
@@ -11,8 +10,7 @@ class SpeechHandler:
         self.r = sr.Recognizer()
         self.mic = sr.Microphone()
         self.word = ""
-        # When you want to queue multiple sound files
-        self.queue = Queue()
+
 
     def speech_to_list(self):
         """
@@ -45,7 +43,6 @@ class SpeechHandler:
         Function is meant to play a song from a file path verbally said in
         in speech_to_list function and queue them if needed
         """
-        self.word = "amongus.wav"
 
         for filename in os.listdir(self.directory):
             f = os.path.join(self.directory, filename)
@@ -54,28 +51,30 @@ class SpeechHandler:
                 print(f)
                 if f.endswith(self.word):
                     print("OK")
-                    playsound(f)
-
-
+                    mixer.init()
+                    mixer.music.load(f)
+                    mixer.music.set_volume(0.7)
+                    mixer.music.play()
+                    while mixer.music.get_busy():
+                        time.Clock().tick(10)
 
     def stop_song(self):
-        pass
-
-    def queue_song(self):
-        pass
-
+        mixer.music.stop()
 
 def main():
-    import pygame
+    # mixer.init()
+    # mixer.music.load(r"D:\Downloads\zapsplat_animals_dog_medium_sized_single_bark_slight_distance_001_70616.mp3")
+    # mixer.music.set_volume(0.7)
+    # mixer.music.play()
+    #
+    # while mixer.music.get_busy():
+    #     time.Clock().tick(10)
 
-    pygame.mixer.init()
-    my_sound = pygame.mixer.Sound(r'C:\Users\Chris\PycharmProjects\mytest_project\Music\amongus.ogg')
-    my_sound.play()
-    pygame.time.wait(int(my_sound.get_length() * 1000))
-    #sh = SpeechHandler(r'\Users\Chris\PycharmProjects\mytest_project\Music')
+    #playsound(r"D:\Downloads\zapsplat_animals_dog_medium_sized_single_bark_slight_distance_001_70616.mp3")
+    sh = SpeechHandler(r'\Users\Chris\PycharmProjects\mytest_project\Music2')
     #C:\Users\Chris\PycharmProjects\mytest_project\Music
-    #sh.speech_to_list()
-    #sh.play_song()
+    sh.speech_to_list()
+    sh.play_song()
 
 
 if __name__ == "__main__":
