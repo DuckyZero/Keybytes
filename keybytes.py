@@ -195,7 +195,7 @@ class SoundBoard():
                 #print("nope1")
                 tempString = tempString+ " " + l[j]
                 tempString = tempString.strip()
-                print(tempString)
+                #print(tempString)
                 if tempString in self.keywords:
                     #print("nope2")
                     self.play(self.keywords[tempString])
