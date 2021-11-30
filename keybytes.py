@@ -14,16 +14,19 @@ import shutil
 from pygame import *
 from pynput import keyboard
 import threading
-from EventHandler import SpeechHandler
+from EventHandler import *
 
 class SoundBoard():
     keybytes = {}
     keywords = {}
 
+
     def __init__(self, dpath):
         self.dpath = dpath
         self.current = ''
         # self.keybytes = {}
+        #self.thread3 = thread3
+
 
     # Creates folder in Appdata/Roaming, if one does not already exist, to store soundbytes.
     def dirCheck(self):
@@ -122,7 +125,7 @@ class SoundBoard():
             for line in lines:
                 templine = line.strip()
                 parts = templine.split(', ')
-                self.keybytes[parts[0]] = parts[1]
+                self.keywords[parts[0]] = parts[1]
                 print('Added %s keyword, with %s keybind' % (parts[0], parts[1]))
         f.close()
 
@@ -136,7 +139,7 @@ class SoundBoard():
 
         for line in self.keywords:
             print('\nKeyword: %s' % line)
-            print('Plays keybind: %s' % self.keybytes[line])
+            print('Plays keybind: %s' % self.keywords[line])
 
         self.menu()
 
@@ -180,10 +183,29 @@ class SoundBoard():
 
         self.menu()
 
-    def play(self):
+    def check_voice(self):
+        #print(self.keybytes)
+        #print(self.keywords)
+        sh = SpeechHandler
+        l = sh.speech_to_list(self)
+        #print(l)
+        for i in range(len(l)):
+            tempString = ''
+            for j in range(i, len(l)):
+                #print("nope1")
+                tempString = tempString+ " " + l[j]
+                tempString = tempString.strip()
+                print(tempString)
+                if tempString in self.keywords:
+                    #print("nope2")
+                    self.play(self.keywords[tempString])
+
+
+
+    def play(self, keybind):
         mixer.init()
-        mixer.music.load(self.keybytes[self.current])
-        mixer.music.set_volume(0.7)
+        mixer.music.load(self.keybytes[keybind])
+        mixer.music.set_volume(0.9)
         mixer.music.play()
         while mixer.music.get_busy():
             time.Clock().tick(10)
@@ -192,7 +214,20 @@ class SoundBoard():
         self.current = self.current + str(key)
         self.current = self.current.replace("'","")
         if self.current in self.keybytes:
-            self.play()
+            self.play(self.current)
+        if str(key) == "'`'":
+            thread3 = threading.Thread(target=self.check_voice(), args=())
+            thread3.start()
+            sh = menu
+            sh.print_menu(self)
+
+    # def push_talk(self, key):
+    #     listener = keyboard.Listener(on_press=self.on_press)
+    #     listener.start()
+    #     if key == '`':
+    #         thread3 = threading.Thread(target=sBoard.check_voice(), args=())
+    #         thread3.start()
+
 
     # Play sound sBoard.keybytes[current]
 
@@ -216,11 +251,12 @@ class SoundBoard():
         print('\n\n[1]: Create Keybyte')
         print('[2]: List Keybytes')
         print('[3]: Delete Keybyte')
+        print('[`]: Toggle Speech-To-Play')
         print('[4]: Exit Program')
 
-        while not (u_inpt == '1' or u_inpt == '2' or u_inpt == '3' or u_inpt == '4'):
+        while not (u_inpt == '1' or u_inpt == '2' or u_inpt == '3' or u_inpt == '4' or u_inpt == '5'):
             u_inpt = input('\nPlease enter a number as shown above: ')
-            if not (u_inpt == '1' or u_inpt == '2' or u_inpt == '3' or u_inpt == '4'):
+            if not (u_inpt == '1' or u_inpt == '2' or u_inpt == '3' or u_inpt == '4' or u_inpt == '5'):
                 print('Invalid input, please try again.')
                 print(u_inpt)
 
@@ -232,12 +268,17 @@ class SoundBoard():
             self.delete_keybyte()
         elif u_inpt == '4':
             sys.exit()
+        elif u_inpt == '5':
+            self.print_menu()
 
 
 # TODO Need to somehow constantly listen to the keyboard so that no matter what the user is doing, they can use their keybytes.
 
 # Create soundboard instance and ensure that if the folder doesnt already exist it is created
+#thread3 = threading.Thread(target=sBoard.check_voice(), args=())
 sBoard = SoundBoard('%s\\KeyBytes\\' % os.environ['APPDATA'])
+
+
 print('Welcome to Keybytes.')
 sBoard.dirCheck()
 sBoard.load_keybytes()
@@ -245,10 +286,9 @@ sBoard.load_keybytes()
 thread1 = threading.Thread(target=sBoard.listen(), args=())
 thread2 = threading.Thread(target=sBoard.menu(), args=())
 
-
 thread1.start()
 thread2.start()
-
+#thread3.start()
 
 
 
@@ -263,4 +303,3 @@ thread2.start()
 # listener = keyboard.Listener(on_press=sBoard.on_press, on_release=sBoard.on_release)
 # listener.start()  # start to listen on a separate thread
 #sBoard.menu()
-
